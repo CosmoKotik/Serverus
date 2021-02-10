@@ -1,0 +1,13 @@
+D:\DEV\Visual Sudio Projects\Serverus\Serverus\Serverus\bin\Debug\netcoreapp3.1\Serverus.exe
+D:\DEV\Visual Sudio Projects\Serverus\Serverus\Serverus\bin\Debug\netcoreapp3.1\Serverus.deps.json
+D:\DEV\Visual Sudio Projects\Serverus\Serverus\Serverus\bin\Debug\netcoreapp3.1\Serverus.runtimeconfig.json
+D:\DEV\Visual Sudio Projects\Serverus\Serverus\Serverus\bin\Debug\netcoreapp3.1\Serverus.runtimeconfig.dev.json
+D:\DEV\Visual Sudio Projects\Serverus\Serverus\Serverus\bin\Debug\netcoreapp3.1\Serverus.dll
+D:\DEV\Visual Sudio Projects\Serverus\Serverus\Serverus\bin\Debug\netcoreapp3.1\Serverus.pdb
+D:\DEV\Visual Sudio Projects\Serverus\Serverus\Serverus\obj\Debug\netcoreapp3.1\Serverus.csprojAssemblyReference.cache
+D:\DEV\Visual Sudio Projects\Serverus\Serverus\Serverus\obj\Debug\netcoreapp3.1\Serverus.AssemblyInfoInputs.cache
+D:\DEV\Visual Sudio Projects\Serverus\Serverus\Serverus\obj\Debug\netcoreapp3.1\Serverus.AssemblyInfo.cs
+D:\DEV\Visual Sudio Projects\Serverus\Serverus\Serverus\obj\Debug\netcoreapp3.1\Serverus.csproj.CoreCompileInputs.cache
+D:\DEV\Visual Sudio Projects\Serverus\Serverus\Serverus\obj\Debug\netcoreapp3.1\Serverus.dll
+D:\DEV\Visual Sudio Projects\Serverus\Serverus\Serverus\obj\Debug\netcoreapp3.1\Serverus.pdb
+D:\DEV\Visual Sudio Projects\Serverus\Serverus\Serverus\obj\Debug\netcoreapp3.1\Serverus.genruntimeconfig.cache
