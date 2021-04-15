@@ -33,7 +33,7 @@ namespace Git_Git_Server
                 Console.WriteLine("Server listening on " + "");
                 while (true)
                 {
-                    IPEndPoint _defaultEP = new IPEndPoint(IPAddress.Parse("192.168.1.12"), 11000);
+                    IPEndPoint _defaultEP = new IPEndPoint(IPAddress.Any, 11000);
                     byte[] bytes = listener.Receive(ref _defaultEP);
                     if (!_clientsIP.Contains(_defaultEP.Address) && _CurrentPlayers != _MaxPlayers)
                     {
@@ -118,9 +118,10 @@ namespace Git_Git_Server
                     if (ping >= 1000)
                     {
                         Console.WriteLine(_clientsIP.ToString() + " has been kicked for: Timeout");
-                        _threads[i].Interrupt();
                         _clientsEP.RemoveAt(i);
                         _clientsIP.RemoveAt(i);
+                        _clientPing.RemoveAt(i);
+                        _threads[i].Interrupt();
                         _CurrentPlayers--;
                     }
                 }

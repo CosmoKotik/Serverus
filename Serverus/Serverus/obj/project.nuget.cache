@@ -1,8 +1,10 @@
 {
   "version": 2,
-  "dgSpecHash": "SX38nyvBey9qadrN+9tdhTeELyhep+6yd8duZhzdXeQ2ZJOZr8M0NGDe4TTy7r7OXKHAcHSs960exCDDPFcViA==",
+  "dgSpecHash": "7daebf7Evd5912uKCkwwgWoZ42qUmyrS0VyDzO7URu+uk/fnFoxD0aQ9J4NkcNZD6cYMmulvR4N3w9YjarUEnA==",
   "success": true,
   "projectFilePath": "D:\\DEV\\Visual Sudio Projects\\Serverus\\Serverus\\Serverus\\Serverus.csproj",
-  "expectedPackageFiles": [],
+  "expectedPackageFiles": [
+    "C:\\Users\\CosmoKotik\\.nuget\\packages\\newtonsoft.json\\13.0.1\\newtonsoft.json.13.0.1.nupkg.sha512"
+  ],
   "logs": []
 }
