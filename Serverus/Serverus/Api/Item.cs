@@ -6,5 +6,6 @@ namespace Serverus.Api
 {
     public class Item
     {
+        public string Name { get; set; }
     }
 }
