@@ -23,34 +23,45 @@ namespace Git_Git_Server
 
         public UdpClient listener = new UdpClient(listenPort);
 
-        public void StartServer()
+        public void StartServer(string ip)
         {
+            Thread timeout_T = new Thread(() => TimeoutService());
             //_clientsIP.Add(IPAddress.Parse("0.0.0.0"));
             try
             {
-                Thread timeout_T = new Thread(() => TimeoutService());
                 timeout_T.Start();
                 Console.WriteLine("Server listening on " + "");
+                listener.Client.Bind(new IPEndPoint(IPAddress.Parse(ip), listenPort));
+
+                listener.EnableBroadcast = true;
                 while (true)
                 {
-                    IPEndPoint _defaultEP = new IPEndPoint(IPAddress.Any, 11000);
-                    byte[] bytes = listener.Receive(ref _defaultEP);
-                    if (!_clientsIP.Contains(_defaultEP.Address) && _CurrentPlayers != _MaxPlayers)
-                    {
-                        Console.WriteLine($"Request from {_defaultEP} for: {Encoding.ASCII.GetString(bytes, 0, bytes.Length)}");
+                    IPEndPoint _defaultEP = new IPEndPoint(IPAddress.Any, listenPort);
+
+                    if (listener.Available != 0)
+                    { 
+                        byte[] bytes = listener.Receive(ref _defaultEP);
+
+                        if (!_clientsIP.Contains(_defaultEP.Address) && _CurrentPlayers != _MaxPlayers)
+                        {
+                            Console.WriteLine($"Request from {_defaultEP} for: {Encoding.ASCII.GetString(bytes, 0, bytes.Length)}");
+
+                            Console.WriteLine($"Registring player: {_defaultEP.Address}");
+
+                            _clientsIP.Add(_defaultEP.Address);
+                            _clientsEP.Add(_defaultEP);
+                            _clientPing.Add(Environment.TickCount);
+
+                            Console.WriteLine($"Trying to connect {_defaultEP}");
+                            _CurrentPlayers++;
+                            Thread t = new Thread(() => NetworkHandler(_CurrentPlayers));
+                            _threads.Add(t);
+                            t.Start();
+                        }
                         
-                        Console.WriteLine($"Registring player: {_defaultEP.Address}");
-                        
-                        _clientsIP.Add(_defaultEP.Address);
-                        _clientsEP.Add(_defaultEP);
-                        _clientPing.Add(Environment.TickCount);
-                        
-                        Console.WriteLine($"Trying to connect {_defaultEP}");
-                        _CurrentPlayers++;
-                        Thread t = new Thread(() => NetworkHandler(_CurrentPlayers));
-                        _threads.Add(t);
-                        t.Start();
                     }
+
+                    Thread.Sleep(1);
                 }
             }
             catch (SocketException e)
@@ -59,6 +70,8 @@ namespace Git_Git_Server
             }
             finally
             {
+                timeout_T.Interrupt();
+                listener.Dispose();
                 listener.Close();
             }
             Console.WriteLine("Server crashed ;-;");
@@ -81,21 +94,33 @@ namespace Git_Git_Server
 
                 try
                 {
+                    if (listener.Client == null)
+                        return;
+
                     byte[] bytes = listener.Receive(ref ep);
-                    Console.WriteLine($"Received data from {ep} with ping of:{ping}, data :");
-                    Console.WriteLine($"{Encoding.ASCII.GetString(bytes, 0, bytes.Length)}");
-                    for (int i = 0; i < _clientsEP.Count; i++)
+
+                    Console.WriteLine($"Received data from {ep} with ping of:{ping}, data : {Encoding.ASCII.GetString(bytes, 0, bytes.Length)}");
+
+                    if (Encoding.ASCII.GetString(bytes, 0, bytes.Length) != " ")
                     {
-                        listener.Send(bytes, bytes.Length, _clientsEP[i]);
-                        Console.WriteLine(i);
+                        /*for (int i = 0; i < _clientsEP.Count; i++)
+                        {
+                            if (_clientsEP[i] != ep)
+                                listener.Send(bytes, bytes.Length, _clientsEP[i]);
+
+                            Console.WriteLine(i);
+                        }*/
+                        listener.Send(bytes, bytes.Length, "255.255.255.255", listenPort);
                     }
+
+
                     ping = Environment.TickCount - lastReceivedTick;
                     lastReceivedTick = Environment.TickCount;
-                    _clientPing[c_idx] = lastReceivedTick;
+                     _clientPing[c_idx] = lastReceivedTick;
                 }
-                catch 
+                catch (SocketException e)
                 {
-                    Console.WriteLine($"Client {ep.Address} error");
+                    Console.WriteLine($"Client {ep.Address} error: " + e);
                     return;
                 }
 
@@ -105,6 +130,7 @@ namespace Git_Git_Server
                 }
             }
             _CurrentPlayers--;
+            Console.WriteLine("Client disconnected");
             Thread.CurrentThread.Interrupt();
         }
 
@@ -115,7 +141,7 @@ namespace Git_Git_Server
                 for (int i = 0; i < _clientPing.Count; i++)
                 {
                     int ping = Environment.TickCount - _clientPing[i];
-                    if (ping >= 1000)
+                    if (ping >= 8000)
                     {
                         Console.WriteLine(_clientsIP.ToString() + " has been kicked for: Timeout");
                         _clientsEP.RemoveAt(i);

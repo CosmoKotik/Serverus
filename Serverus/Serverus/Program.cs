@@ -14,7 +14,7 @@ namespace Git_Git_Server
             Console.WriteLine("Port: " + ld.GetLocalConfig("SERVER_PORT"));
 
             Network nk = new Network();
-            nk.StartServer();
+            nk.StartServer("192.168.0.32");
         }
     }
 }

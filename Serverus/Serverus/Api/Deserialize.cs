@@ -4,6 +4,7 @@ using System.Text;
 using System.IO;
 using System.Security.Cryptography;
 using Newtonsoft.Json;
+using Serverus.ACS;
 
 namespace Serverus.Api
 {
@@ -59,11 +60,18 @@ namespace Serverus.Api
             return plaintext;
         }
 
-        public void DeserializeProperty(byte[] msg)
+        public string DeserializeProperty(byte[] msg)
         {
             string decrypted = Decrypt(msg);
 
             Data deserializedData = JsonConvert.DeserializeObject<Data>(decrypted);
+
+            AntiCheat ach = new AntiCheat(deserializedData.player.MapID);
+
+            if (ach.CheckCheats(deserializedData.player))
+                return "";
+
+            return decrypted;
         }
     }
 }
