@@ -31,18 +31,17 @@ namespace Git_Git_Server
             {
                 timeout_T.Start();
                 Console.WriteLine("Server listening on " + "");
-                listener.Client.Bind(new IPEndPoint(IPAddress.Parse(ip), listenPort));
+                //listener.Client.Bind(new IPEndPoint(IPAddress.Any, listenPort));
 
-                listener.EnableBroadcast = true;
                 while (true)
                 {
-                    IPEndPoint _defaultEP = new IPEndPoint(IPAddress.Any, listenPort);
+                    IPEndPoint _defaultEP = new IPEndPoint(IPAddress.Parse(ip), listenPort);
 
                     if (listener.Available != 0)
                     { 
                         byte[] bytes = listener.Receive(ref _defaultEP);
 
-                        if (!_clientsIP.Contains(_defaultEP.Address) && _CurrentPlayers != _MaxPlayers)
+                        if (!_clientsEP.Contains(_defaultEP) && _CurrentPlayers != _MaxPlayers)
                         {
                             Console.WriteLine($"Request from {_defaultEP} for: {Encoding.ASCII.GetString(bytes, 0, bytes.Length)}");
 
@@ -79,6 +78,8 @@ namespace Git_Git_Server
 
         private void NetworkHandler(int client_index)
         {
+            //listener.Client.Bind(new IPEndPoint(IPAddress.Any, listenPort));
+
             Console.WriteLine($"Player connected");
             int c_idx = client_index - 1;
 
@@ -99,18 +100,27 @@ namespace Git_Git_Server
 
                     byte[] bytes = listener.Receive(ref ep);
 
-                    Console.WriteLine($"Received data from {ep} with ping of:{ping}, data : {Encoding.ASCII.GetString(bytes, 0, bytes.Length)}");
+                    //Console.WriteLine($"Received data from {ep} with ping of:{ping}, data : {Encoding.ASCII.GetString(bytes, 0, bytes.Length)}");
+
+                    listener.Send(bytes, bytes.Length, "255.255.255.255", listenPort);
 
                     if (Encoding.ASCII.GetString(bytes, 0, bytes.Length) != " ")
                     {
                         /*for (int i = 0; i < _clientsEP.Count; i++)
                         {
-                            if (_clientsEP[i] != ep)
+                            //Console.WriteLine(_clientsEP.Count);
+
+                            //if (_clientsEP[i] != ep)
                                 listener.Send(bytes, bytes.Length, _clientsEP[i]);
 
                             Console.WriteLine(i);
                         }*/
-                        listener.Send(bytes, bytes.Length, "255.255.255.255", listenPort);
+
+                        foreach (IPEndPoint endP in _clientsEP)
+                        {
+                            listener.Send(bytes, bytes.Length, endP);
+                        }
+                        //listener.Send(bytes, bytes.Length, "255.255.255.255", listenPort);
                     }
 
 
