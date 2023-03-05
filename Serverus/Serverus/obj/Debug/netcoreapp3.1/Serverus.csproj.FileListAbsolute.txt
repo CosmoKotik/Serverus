@@ -13,3 +13,5 @@ D:\DEV\Visual Sudio Projects\Serverus\Serverus\Serverus\obj\Debug\netcoreapp3.1\
 D:\DEV\Visual Sudio Projects\Serverus\Serverus\Serverus\obj\Debug\netcoreapp3.1\Serverus.genruntimeconfig.cache
 D:\DEV\Visual Sudio Projects\Serverus\Serverus\Serverus\bin\Debug\netcoreapp3.1\Newtonsoft.Json.dll
 D:\DEV\Visual Sudio Projects\Serverus\Serverus\Serverus\obj\Debug\netcoreapp3.1\Serverus.csproj.CopyComplete
+D:\DEV\Visual Sudio Projects\Serverus\Serverus\Serverus\obj\Debug\netcoreapp3.1\Serverus.csproj.AssemblyReference.cache
+D:\DEV\Visual Sudio Projects\Serverus\Serverus\Serverus\obj\Debug\netcoreapp3.1\Serverus.GeneratedMSBuildEditorConfig.editorconfig
