@@ -1,2 +1,10 @@
-﻿// See https://aka.ms/new-console-template for more information
-Console.WriteLine("Hello, World!");
+﻿using MasterServer.Core;
+
+public class Program
+{
+    public static void Main()
+    { 
+        Network n = new Network();
+        n.StartServer();
+    }
+}

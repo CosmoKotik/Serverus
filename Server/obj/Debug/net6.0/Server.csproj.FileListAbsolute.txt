@@ -1,0 +1,15 @@
+D:\DEV\Visual Sudio Projects\Serverus\Server\bin\Debug\net6.0\Server.exe
+D:\DEV\Visual Sudio Projects\Serverus\Server\bin\Debug\net6.0\Server.deps.json
+D:\DEV\Visual Sudio Projects\Serverus\Server\bin\Debug\net6.0\Server.runtimeconfig.json
+D:\DEV\Visual Sudio Projects\Serverus\Server\bin\Debug\net6.0\Server.dll
+D:\DEV\Visual Sudio Projects\Serverus\Server\bin\Debug\net6.0\Server.pdb
+D:\DEV\Visual Sudio Projects\Serverus\Server\obj\Debug\net6.0\Server.csproj.AssemblyReference.cache
+D:\DEV\Visual Sudio Projects\Serverus\Server\obj\Debug\net6.0\Server.GeneratedMSBuildEditorConfig.editorconfig
+D:\DEV\Visual Sudio Projects\Serverus\Server\obj\Debug\net6.0\Server.AssemblyInfoInputs.cache
+D:\DEV\Visual Sudio Projects\Serverus\Server\obj\Debug\net6.0\Server.AssemblyInfo.cs
+D:\DEV\Visual Sudio Projects\Serverus\Server\obj\Debug\net6.0\Server.csproj.CoreCompileInputs.cache
+D:\DEV\Visual Sudio Projects\Serverus\Server\obj\Debug\net6.0\Server.dll
+D:\DEV\Visual Sudio Projects\Serverus\Server\obj\Debug\net6.0\refint\Server.dll
+D:\DEV\Visual Sudio Projects\Serverus\Server\obj\Debug\net6.0\Server.pdb
+D:\DEV\Visual Sudio Projects\Serverus\Server\obj\Debug\net6.0\Server.genruntimeconfig.cache
+D:\DEV\Visual Sudio Projects\Serverus\Server\obj\Debug\net6.0\ref\Server.dll

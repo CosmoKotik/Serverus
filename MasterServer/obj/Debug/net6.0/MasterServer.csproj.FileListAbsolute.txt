@@ -1,0 +1,15 @@
+D:\DEV\Visual Sudio Projects\Serverus\MasterServer\obj\Debug\net6.0\MasterServer.csproj.AssemblyReference.cache
+D:\DEV\Visual Sudio Projects\Serverus\MasterServer\obj\Debug\net6.0\MasterServer.GeneratedMSBuildEditorConfig.editorconfig
+D:\DEV\Visual Sudio Projects\Serverus\MasterServer\obj\Debug\net6.0\MasterServer.AssemblyInfoInputs.cache
+D:\DEV\Visual Sudio Projects\Serverus\MasterServer\obj\Debug\net6.0\MasterServer.AssemblyInfo.cs
+D:\DEV\Visual Sudio Projects\Serverus\MasterServer\obj\Debug\net6.0\MasterServer.csproj.CoreCompileInputs.cache
+D:\DEV\Visual Sudio Projects\Serverus\MasterServer\bin\Debug\net6.0\MasterServer.exe
+D:\DEV\Visual Sudio Projects\Serverus\MasterServer\bin\Debug\net6.0\MasterServer.deps.json
+D:\DEV\Visual Sudio Projects\Serverus\MasterServer\bin\Debug\net6.0\MasterServer.runtimeconfig.json
+D:\DEV\Visual Sudio Projects\Serverus\MasterServer\bin\Debug\net6.0\MasterServer.dll
+D:\DEV\Visual Sudio Projects\Serverus\MasterServer\bin\Debug\net6.0\MasterServer.pdb
+D:\DEV\Visual Sudio Projects\Serverus\MasterServer\obj\Debug\net6.0\MasterServer.dll
+D:\DEV\Visual Sudio Projects\Serverus\MasterServer\obj\Debug\net6.0\refint\MasterServer.dll
+D:\DEV\Visual Sudio Projects\Serverus\MasterServer\obj\Debug\net6.0\MasterServer.pdb
+D:\DEV\Visual Sudio Projects\Serverus\MasterServer\obj\Debug\net6.0\MasterServer.genruntimeconfig.cache
+D:\DEV\Visual Sudio Projects\Serverus\MasterServer\obj\Debug\net6.0\ref\MasterServer.dll
