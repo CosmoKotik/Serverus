@@ -34,11 +34,14 @@ namespace Server.Core
         {
             try
             {
+                while (!Udp.IsStarted) { Thread.Sleep(1); }
+                _port = new Random().Next(50000, 51000);
+                _localIp = "10.0.1.3";
                 _client.Connect(IPAddress.Parse(_mainSrvIP), _mainSrvPort);
                 //while (!_client.Connected) { Thread.Sleep(1); }
                 _client.ReceiveBufferSize = MAX_BUFFER_SIZE;
                 //_client.ReceiveTimeout = TIMEOUT;
-
+               
                 _stream = _client.GetStream();
 
                 byte[] bytes = new byte[MAX_BUFFER_SIZE];
@@ -63,9 +66,22 @@ namespace Server.Core
                                         ServerID = _bufferManager.GetLong(),
                                         SrvType = (Servers.ServerType)_bufferManager.GetInt(),
                                         IP = _localIp,
-                                        Port = _port
+                                        Port = _port,
+                                        //Stream = _stream,
+                                        //Client = _client
                                     };
-                                    Console.WriteLine($"Runnins as {ServerInfo.SrvType}");
+
+                                    _bufferManager.SetPacketId(0x00);
+                                    _bufferManager.AddLong(ServerInfo.ServerID);
+                                    _bufferManager.AddString(ServerInfo.IP);
+                                    _bufferManager.AddInt(ServerInfo.Port);
+
+                                    _stream.Write(_bufferManager.GetBytes());
+
+                                    IPEndPoint ep = new IPEndPoint(IPAddress.Parse(ServerInfo.IP), _port);
+                                    ServerInfo.Client = new TcpClient(ep);
+
+                                    Console.WriteLine($"Runnins as {ServerInfo.SrvType} at {ServerInfo.Port}");
                                     break;
                                 case 0x01:
                                     srvs = new Servers()
@@ -75,8 +91,21 @@ namespace Server.Core
                                         IP = _bufferManager.GetString(),
                                         Port = _bufferManager.GetInt()
                                     };
+
+                                    //srvs.Client = new TcpClient(srvs.IP, srvs.Port);
+                                    //srvs.Stream = srvs.Client.GetStream();
+
                                     //Add other auth/game server
-                                    Console.WriteLine($"Added new {srvs.SrvType} server");
+                                    Console.WriteLine($"Added new {srvs.SrvType} server from port {srvs.Port}");
+
+                                    _bufferManager.SetPacketId(0x02);
+                                    _bufferManager.AddLong(ServerInfo.ServerID);
+                                    _bufferManager.AddInt((int)srvs.SrvType);
+                                    _bufferManager.AddString(ServerInfo.IP);
+                                    _bufferManager.AddInt(ServerInfo.Port);
+
+                                    //srvs.Stream.Write(_bufferManager.GetBytes());
+
                                     OtherServers.Add(srvs);
                                     break;
                                 case 0x02:
@@ -87,7 +116,7 @@ namespace Server.Core
                                         IP = _bufferManager.GetString(),
                                         Port = _bufferManager.GetInt()
                                     };
-                                    Console.WriteLine($"Added new {srvs.SrvType} server111");
+                                    Console.WriteLine($"skjjdfskjdfkjdfsaaaaaaaaerver111");
                                     OtherServers.Add(srvs);
                                     break;
                             }
