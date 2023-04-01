@@ -19,10 +19,11 @@ namespace MasterServer.Core
         private int _port = 38174;
         private string _localIp = "10.0.1.3";
 
-        private TcpListener _server = null;
+        private TcpListener? _server;
 
         public void StartServer()
         {
+            _localIp = GetLocalIPAddress();
             _server = new TcpListener(IPAddress.Parse(_localIp), _port);
             _server.Start();
             Console.WriteLine("Server started on: " + _port);
@@ -42,9 +43,13 @@ namespace MasterServer.Core
                     if (Servers.Any(x => x.SrvType == ServerType.Auth))
                         srvType = ServerType.Game;
 
+                    long serverId = new Random().NextInt64();
+                    if (Servers.Any(x => x.ServerID.Equals(serverId)))
+                        serverId = new Random().NextInt64();
+
                     Server srv = new Server()
                     {
-                        ServerID = new Random().NextInt64(),
+                        ServerID = serverId,
                         SrvType = srvType,
                         IP = clientEP.Address.ToString(),
                         Port = clientEP.Port,
@@ -64,6 +69,19 @@ namespace MasterServer.Core
             {
                 _server.Stop();
             }
+        }
+
+        private static string GetLocalIPAddress()
+        {
+            var host = Dns.GetHostEntry(Dns.GetHostName());
+            foreach (var ip in host.AddressList)
+            {
+                if (ip.AddressFamily == AddressFamily.InterNetwork)
+                {
+                    return ip.ToString();
+                }
+            }
+            throw new Exception("No network adapters with an IPv4 address in the system!");
         }
     }
 }

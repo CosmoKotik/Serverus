@@ -1,0 +1,2 @@
+\\10.0.0.34\Build\MasterServer.pdb
+\\10.0.0.34\Build\MasterServer.exe

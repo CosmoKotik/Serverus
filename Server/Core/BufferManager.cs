@@ -26,7 +26,7 @@ namespace Server.Core
         }
         public void AddString(string value)
         {
-            byte[] bytes = Encoding.ASCII.GetBytes(value);
+            byte[] bytes = Encoding.UTF8.GetBytes(value);
             _buffer.Add((byte)bytes.Length);
             _buffer.AddRange(bytes);
         }
@@ -115,7 +115,7 @@ namespace Server.Core
 
             _buffer.RemoveRange(0, (int)_buffer[0] + 1);
 
-            return Encoding.ASCII.GetString(result);
+            return Encoding.UTF8.GetString(result);
         }
 
         #endregion

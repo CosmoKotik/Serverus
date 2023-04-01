@@ -1,0 +1,5 @@
+\\10.0.0.34\Build\MasterServer.exe
+\\10.0.0.34\Build\MasterServer.dll
+\\10.0.0.34\Build\MasterServer.deps.json
+\\10.0.0.34\Build\MasterServer.runtimeconfig.json
+\\10.0.0.34\Build\MasterServer.pdb

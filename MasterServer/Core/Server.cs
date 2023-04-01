@@ -12,8 +12,11 @@ namespace MasterServer.Core
     {
         public long ServerID { get; set; }
         public ServerType SrvType { get; set; }
-        public string IP { get; set; }
+        public string? IP { get; set; }
         public int Port { get; set; }
+
+        public int MaxConnections { get; set; }
+        public int CurrentConnections { get; set; }
 
         public TcpClient Client { get; set; }
     }
