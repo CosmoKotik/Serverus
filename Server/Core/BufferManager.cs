@@ -51,6 +51,17 @@ namespace Server.Core
                 _buffer[0] = id;
         }
 
+        public void SetPacketUid(int puid)
+        {
+            _buffer.InsertRange(1, BitConverter.GetBytes(puid));
+        }
+        public static byte[] SetPacketUid(int puid, byte[] bytes)
+        {
+            List<byte> buffer = bytes.ToList();
+            buffer.InsertRange(1, BitConverter.GetBytes(puid));
+            return buffer.ToArray();
+        }
+
         #endregion
 
         #region Get/Retreive

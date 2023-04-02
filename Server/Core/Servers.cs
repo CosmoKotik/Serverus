@@ -18,20 +18,21 @@ namespace Server.Core
 
         public long ServerID { get; set; }
         public ServerType SrvType { get; set; }
-        public string? IP { get; set; }
+        public string IP { get; set; } = default!;
         public int Port { get; set; }
 
         public int MaxConnections { get; set; }
         public int CurrentConnections { get; set; }
 
         //TCP
-        public TcpListener? Server { get; set; }
-        public TcpClient? Client { get; set; }
-        public NetworkStream? Stream { get; set; }
+        public TcpListener Server { get; set; } = default!;
+        public TcpClient Client { get; set; } = default!;
+        public NetworkStream Stream { get; set; } = default!;
 
         //Udp shit
         //public int Udp_port { get; set; }
-        public UdpClient? Udp_Client { get; set; }
+        public int UdpPort { get; set; }
+        public UdpClient Udp_Client { get; set; } = default!;
         public List<byte[]> Udp_Queue { get; set; } = new List<byte[]>();
     }
 }

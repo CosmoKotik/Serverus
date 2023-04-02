@@ -11,7 +11,10 @@ namespace MasterServer.Core
 {
     internal class Network
     {
+        public bool Started { get; set; }
+
         public List<Server> Servers { get; set; } = new List<Server>();
+        public List<int> AvailableServers { get; set; } = new List<int>();
 
         public const int MAX_BUFFER_SIZE = 1024;
         public const int TIMEOUT = 500;
@@ -27,6 +30,7 @@ namespace MasterServer.Core
             _server = new TcpListener(IPAddress.Parse(_localIp), _port);
             _server.Start();
             Console.WriteLine("Server started on: " + _port);
+            Started = true;
 
             byte[] bytes = new byte[MAX_BUFFER_SIZE];
 
@@ -51,7 +55,7 @@ namespace MasterServer.Core
                     {
                         ServerID = serverId,
                         SrvType = srvType,
-                        IP = clientEP.Address.ToString(),
+                        IP = clientEP!.Address.ToString(),
                         Port = clientEP.Port,
                         Client = client
                     };

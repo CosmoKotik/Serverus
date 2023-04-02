@@ -11,7 +11,7 @@ namespace MasterServer.Core
 {
     internal class UdpHandler
     {
-        public Network? Net { get; set; }
+        public Network Net { get; set; } = default!;
 
         public readonly object OtherServersLock = new object();
         public readonly object ConnectedEPLock = new object();
@@ -24,7 +24,7 @@ namespace MasterServer.Core
 
         private int _port = 38175;
         private string _localIp = "10.0.1.3";
-        private UdpClient? _server;
+        private UdpClient _server = default!;
 
         public UdpHandler(Network n)
         {
@@ -33,12 +33,15 @@ namespace MasterServer.Core
 
         public void StartServer()
         {
+            while (!Net.Started) { Thread.Sleep(1); }
+
             _localIp = GetLocalIPAddress();
+            Console.WriteLine(_localIp);
             IPEndPoint bind = new IPEndPoint(IPAddress.Parse(_localIp), _port);
             using (_server = new UdpClient(bind))
             {
                 _server.MulticastLoopback = true;
-                _server.AllowNatTraversal(true);
+                //_server.AllowNatTraversal(true);
 
                 IPEndPoint groupEP = new IPEndPoint(IPAddress.Any, _port);
                 BufferManager bm = new BufferManager();
@@ -68,7 +71,19 @@ namespace MasterServer.Core
                         switch (packetId)
                         {
                             case 0x00:
-                                
+                                for (int i = 1; i < Net.Servers.Count; i++)
+                                {
+                                    if (Net.Servers[i - 1].CurrentConnections <= Net.Servers[i].CurrentConnections)
+                                    {
+                                        Server srv = Net.Servers[i - 1];
+                                        bm.SetPacketId(0x00);
+                                        bm.AddString(srv.IP);
+                                        bm.AddInt(srv.UdpPort);
+                                        SendWithACK(bm.GetBytes(), groupEP);
+                                        //_server.Send(bm.GetBytes(), groupEP);
+                                        break;
+                                    }
+                                }
                                 break;
                         }
                     }
@@ -84,8 +99,11 @@ namespace MasterServer.Core
             }
         }
 
-        private void SendWithACK(byte[] bytes, IPEndPoint ep, int puid)
+        private void SendWithACK(byte[] bytes, IPEndPoint ep)
         {
+            int puid = GetPacketID();
+            bytes = BufferManager.SetPacketUid(puid, bytes);
+
             Packet p = new Packet()
             {
                 bytes = bytes,
@@ -109,6 +127,11 @@ namespace MasterServer.Core
                 }
                 Thread.Sleep(200);
             }
+        }
+
+        private int GetPacketID()
+        {
+            return new Random().Next(1, int.MaxValue);
         }
 
         private static string GetLocalIPAddress()

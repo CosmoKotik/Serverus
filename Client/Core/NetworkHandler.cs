@@ -11,8 +11,8 @@ namespace Client.Core
 {
     internal class NetworkHandler
     {
-        public string? MainServerIP { get; set; } = "10.0.1.3";
-        public int? MainServerPort { get; set; } = 38175;
+        public string MainServerIP { get; set; } = "10.0.0.34";
+        public int MainServerPort { get; set; } = 38175;
 
         public bool IsConnected { get; set; }
 
@@ -22,32 +22,30 @@ namespace Client.Core
         public List<Packet> ACKPackets { get; set; } = new List<Packet>();
         public List<int> ACKPacketIds { get; set; } = new List<int>();
 
-        private int _port = 0;
-        private UdpClient _client;
+        private int _port;
+        private UdpClient _client = default!;
 
-        private int _clientID = 0;
+        private int _clientID;
 
-        public void HandleConnection(IPEndPoint ep)
+        public void HandleConnection()
         {
             _port = new Random().Next(50000, 55000);
             using (_client = new UdpClient())
             {
-                _clientID = new Random().Next(1, int.MaxValue);
-
                 //new Thread(() => { HandleACK(); }).Start();
 
-                IPEndPoint groupEP = ep;
                 BufferManager bm = new BufferManager();
 
                 try
                 {
                     _client.MulticastLoopback = true;
-                    _client.AllowNatTraversal(true);
+                    //_client.AllowNatTraversal(true);
 
                     bm.SetPacketId(0x00);
                     bm.AddInt(_clientID);
 
-                    SendWithACK(bm.GetBytes(), ep);
+                    IPEndPoint groupEP = new IPEndPoint(IPAddress.Parse(MainServerIP), MainServerPort);
+                    SendWithACK(bm.GetBytes(), groupEP);
 
                     while (true)
                     {
@@ -68,6 +66,33 @@ namespace Client.Core
                             lock (ACKPacketIdsLock)
                                 if (ACKPacketIds.Any(x => x.Equals(puid)))
                                     continue;
+
+                            switch (packetId)
+                            {
+                                //Redirect to specific server
+                                case 0x00:
+                                    string srvIP = bm.GetString();
+                                    int srvPort = bm.GetInt();
+                                    groupEP = new IPEndPoint(IPAddress.Parse(srvIP), srvPort);
+                                    bm.SetPacketId(0x00);
+                                    //bm.AddInt(_clientID);
+                                    SendWithACK(bm.GetBytes(), groupEP);
+                                    break;
+                                //Authentication shit
+                                case 0x01:
+                                    _clientID = bm.GetInt();
+
+                                    bm.SetPacketId(0x01);
+
+                                    SendWithACK(bm.GetBytes(), groupEP);
+
+                                    //Send other crap
+                                    break;
+                                //Get required data for p2p
+                                case 0x02:
+
+                                    break;
+                            }
                         }
                     }
                 }
@@ -78,6 +103,7 @@ namespace Client.Core
             }
         }
 
+        #region ACK / Reliable UDP
         /*private void BroadcastWithACK(byte[] bytes, int puid, bool includeSelf = false)
         {
             foreach (IPEndPoint ep in ConnectedEP)
@@ -134,5 +160,7 @@ namespace Client.Core
         { 
             return new Random().Next(1, int.MaxValue);
         }
+
+        #endregion 
     }
 }

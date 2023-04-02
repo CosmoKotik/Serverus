@@ -12,7 +12,7 @@ namespace Server.Core
 {
     internal class UdpNetwork
     {
-        public TcpNetwork? Tcp { get; set; }
+        public TcpNetwork Tcp { get; set; } = default!;
 
         public readonly object OtherServersLock = new object();
         public readonly object ConnectedEPLock = new object();
@@ -23,6 +23,8 @@ namespace Server.Core
         public List<IPEndPoint> ConnectedEP { get; set; } = new List<IPEndPoint>();
         public List<Packet> ACKPackets { get; set; } = new List<Packet>();
         public List<int> ACKPacketIds { get; set; } = new List<int>();
+
+        public List<Client> ConnectedClients { get; set; } = new List<Client>();
 
         public int Port { get; set; } = 6666;
         public bool IsStarted { get; set; } = false;
@@ -46,7 +48,7 @@ namespace Server.Core
             using (_server = new UdpClient(bind))
             {
                 _server.MulticastLoopback = true;
-                _server.AllowNatTraversal(true);
+                //_server.AllowNatTraversal(true);
 
                 IsStarted = true;
 
@@ -89,17 +91,21 @@ namespace Server.Core
                         //New client connected bs
                         switch (packetId)
                         {
+                            //Start authentication packet
                             case 0x00:
-                                Servers srv = new Servers()
+                                if (Tcp.ServerInfo.SrvType.Equals(Servers.ServerType.Auth))
                                 {
-                                    IP = groupEP.Address.ToString(),
-                                    Port = groupEP.Port
-                                };
+                                    int clientId = new Random().Next(1, int.MaxValue);
+                                    bm.SetPacketId(0x01);
+                                    bm.AddInt(clientId);
+                                }
+                                break;
+                            //Authentication crap
+                            case 0x01:
 
-                                Console.WriteLine("poopie");
+                                //Authentication failed
+                                SendWithACK(BitConverter.GetBytes(0xff), groupEP);
 
-                                ConnectedEP.Add(groupEP);
-                                OtherServers.Add(srv);
                                 break;
                         }
                     }
@@ -159,6 +165,8 @@ namespace Server.Core
             }
         }
 
+        #region ACK / Reliable UDP
+
         private void BroadcastWithACK(byte[] bytes, int puid, bool includeSelf = false)
         {
             foreach (IPEndPoint ep in ConnectedEP)
@@ -181,8 +189,11 @@ namespace Server.Core
             }
         }
 
-        private void SendWithACK(byte[] bytes, IPEndPoint ep, int puid)
+        private void SendWithACK(byte[] bytes, IPEndPoint ep)
         {
+            int puid = GetPacketID();
+            bytes = BufferManager.SetPacketUid(puid, bytes);
+
             Packet p = new Packet()
             {
                 bytes = bytes,
@@ -207,6 +218,13 @@ namespace Server.Core
                 Thread.Sleep(200);
             }
         }
+
+        private int GetPacketID()
+        {
+            return new Random().Next(1, int.MaxValue);
+        }
+
+        #endregion
 
         private static string GetLocalIPAddress()
         {

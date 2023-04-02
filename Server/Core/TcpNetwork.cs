@@ -13,14 +13,14 @@ namespace Server.Core
 {
     internal class TcpNetwork
     {
-        public UdpNetwork? Udp { get; set; }
+        public UdpNetwork Udp { get; set; } = default!;
 
         public List<Servers> OtherServers { get; set; } = new List<Servers>();
 
-        public Servers? ServerInfo { get; set; }
+        public Servers ServerInfo { get; set; } = default!;
 
-        private TcpClient? _client;
-        private NetworkStream _stream = null;
+        private TcpClient _client = default!;
+        private NetworkStream _stream = default!;
         private BufferManager _bufferManager = new BufferManager();
 
         public const int MAX_BUFFER_SIZE = 1024;
@@ -30,7 +30,7 @@ namespace Server.Core
         private string _mainSrvIP = "10.0.1.3";
 
         private int _port;
-        private string? _localIp;
+        private string _localIp = default!;
 
         internal void StartServer()
         {
@@ -86,11 +86,13 @@ namespace Server.Core
                                     ServerInfo.SrvType = (Servers.ServerType)_bufferManager.GetInt();
                                     ServerInfo.IP = _localIp;
                                     ServerInfo.Port = _port;
+                                    ServerInfo.UdpPort = Udp.Port;
 
                                     _bufferManager.SetPacketId(0x00);
                                     _bufferManager.AddLong(ServerInfo.ServerID);
                                     _bufferManager.AddString(ServerInfo.IP);
                                     _bufferManager.AddInt(ServerInfo.Port);
+                                    _bufferManager.AddInt(ServerInfo.UdpPort);
                                     _bufferManager.AddInt(ServerInfo.MaxConnections);
 
                                     _stream.Write(_bufferManager.GetBytes());
@@ -108,6 +110,7 @@ namespace Server.Core
                                         SrvType = (Servers.ServerType)_bufferManager.GetInt(),
                                         IP = _bufferManager.GetString(),
                                         Port = _bufferManager.GetInt(),
+                                        UdpPort = _bufferManager.GetInt(),
                                         MaxConnections = _bufferManager.GetInt()
                                     };
                                     TcpClient client = new TcpClient();
@@ -191,7 +194,7 @@ namespace Server.Core
                 Thread.Sleep(1);
             }
 
-            Console.WriteLine("Wow u somehow managed to close it, amazing");
+            //Console.WriteLine("Wow u somehow managed to close it, amazing");
         }
 
         private void HandlePeer(TcpClient client)
@@ -219,7 +222,7 @@ namespace Server.Core
                                 {
                                     ServerID = bm.GetLong(),
                                     SrvType = (Servers.ServerType)bm.GetInt(),
-                                    IP = clientEP.Address.ToString(),
+                                    IP = clientEP!.Address.ToString(),
                                     Port = bm.GetInt()
                                 };
 
@@ -240,8 +243,10 @@ namespace Server.Core
                                 long serverId = bm.GetLong();
                                 int cc = bm.GetInt();
 
-                                OtherServers.Find(x => x.ServerID.Equals(serverId)).CurrentConnections = cc;
-                                Console.WriteLine($"{serverId}: {cc}/{OtherServers.Find(x => x.ServerID.Equals(serverId)).MaxConnections}");
+                                Servers currentsrv = OtherServers.Find(x => x.ServerID.Equals(serverId))!;
+
+                                currentsrv.CurrentConnections = cc;
+                                Console.WriteLine($"{serverId}: {cc}/{currentsrv.MaxConnections}");
                                 break;
                         }
                     }
@@ -253,6 +258,7 @@ namespace Server.Core
             }
             finally
             {
+                Console.WriteLine($"Server Lost Connection");
                 client.Dispose();
             }
         }

@@ -10,14 +10,15 @@ namespace MasterServer.Core
 {
     internal class Server
     {
-        public long ServerID { get; set; }
+        public long ServerID { get; set; } 
         public ServerType SrvType { get; set; }
-        public string? IP { get; set; }
+        public string IP { get; set; } = default!;
         public int Port { get; set; }
+        public int UdpPort { get; set; }
 
         public int MaxConnections { get; set; }
         public int CurrentConnections { get; set; }
 
-        public TcpClient Client { get; set; }
+        public TcpClient Client { get; set; } = default!;
     }
 }

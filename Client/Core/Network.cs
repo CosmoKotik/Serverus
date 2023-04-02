@@ -10,11 +10,10 @@ namespace Client.Core
 {
     internal class Network
     {
-        public static void Connect(string hostname, int port)
+        public static void Connect()
         {
             NetworkHandler nh = new NetworkHandler();
-            IPEndPoint ep = new IPEndPoint(IPAddress.Parse(hostname), port);
-            nh.HandleConnection(ep);
+            nh.HandleConnection();
         }
     }
 }

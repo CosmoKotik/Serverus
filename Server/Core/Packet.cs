@@ -9,8 +9,8 @@ namespace Server.Core
 {
     internal class Packet
     {
-        public byte[]? bytes { get; set; }
-        public IPEndPoint? EP { get; set; }
-        public int PacketUID { get; set; }
+        public byte[] bytes { get; set; } = default!;
+        public IPEndPoint EP { get; set; } = default!;
+        public int PacketUID { get; set; } = default!;
     }
 }

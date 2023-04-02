@@ -11,7 +11,7 @@ namespace MasterServer.Core
 {
     internal class ClientHandler
     {
-        private Network _network = new Network();
+        private Network _network = default!;
         public ClientHandler(Network network)
         {
             this._network = network;
@@ -55,6 +55,7 @@ namespace MasterServer.Core
 
                                 srv.IP = bm.GetString();
                                 srv.Port = bm.GetInt();
+                                srv.UdpPort = bm.GetInt();
                                 srv.MaxConnections = bm.GetInt();
                                 //Console.WriteLine(srv.Port);
 
@@ -67,6 +68,7 @@ namespace MasterServer.Core
                                         bm.AddInt((int)_network.Servers[i].SrvType);
                                         bm.AddString(_network.Servers[i].IP);
                                         bm.AddInt(_network.Servers[i].Port);
+                                        bm.AddInt(_network.Servers[i].UdpPort);
                                         bm.AddInt(_network.Servers[i].MaxConnections);
                                         stream.Write(bm.GetBytes(), 0, bm.GetBytes().Length);
                                         stream.Flush();
@@ -77,6 +79,7 @@ namespace MasterServer.Core
                                         bm.AddInt((int)srv.SrvType);
                                         bm.AddString(srv.IP);
                                         bm.AddInt(srv.Port);
+                                        bm.AddInt(srv.UdpPort);
                                         bm.AddInt(srv.MaxConnections);
                                         _network.Servers[i].Client.GetStream().Write(bm.GetBytes(), 0, bm.GetBytes().Length);
                                         _network.Servers[i].Client.GetStream().Flush();
@@ -88,7 +91,11 @@ namespace MasterServer.Core
 
                                 break;
                             case 0x05:
-                                _network.Servers.Find(x => x.ServerID.Equals(bm.GetLong())).CurrentConnections = bm.GetInt();
+                                long serverId = bm.GetLong();
+                                int cc = bm.GetInt();
+                                _network.Servers.Find(x => x.ServerID.Equals(serverId))!.CurrentConnections = cc;
+
+
                                 break;
                         }
                     }

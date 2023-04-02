@@ -4,8 +4,8 @@ namespace Server
 {
     internal class Program
     {
-        public static Thread t1;
-        public static Thread t2;
+        public static Thread t1 = default!;
+        public static Thread t2 = default!;
 
         static void Main(string[] args)
         {
