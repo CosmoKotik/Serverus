@@ -1,9 +1,0 @@
-{
-  "runtimeOptions": {
-    "additionalProbingPaths": [
-      "C:\\Users\\CosmoKotik\\.dotnet\\store\\|arch|\\|tfm|",
-      "C:\\Users\\CosmoKotik\\.nuget\\packages",
-      "C:\\Microsoft\\Xamarin\\NuGet"
-    ]
-  }
-}

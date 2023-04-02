@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Client.Core
 {
-    internal class BufferManager
+    public class BufferManager
     {
         private List<byte> _buffer = new List<byte>();
 
@@ -35,6 +35,10 @@ namespace Client.Core
             _buffer.Add((byte)value.Length);
             _buffer.AddRange(value);
         }
+        public void InsertBytes(byte[] value)
+        {
+            _buffer.AddRange(value);
+        }
         public void AddByte(byte value)
         {
             _buffer.Add((byte)1);
@@ -49,6 +53,18 @@ namespace Client.Core
                 _buffer.Add(id);
             else
                 _buffer[0] = id;
+        }
+
+        public void InsertPacketId(byte id)
+        {
+            _buffer.Insert(0, id);
+        }
+
+        public static byte[] InsertPacketId(byte[] bytes, byte id)
+        {
+            List<byte> buffer = bytes.ToList();
+            buffer.Insert(0, id);
+            return buffer.ToArray();
         }
 
         public void SetPacketUid(int puid)

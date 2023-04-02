@@ -35,6 +35,10 @@ namespace Server.Core
             _buffer.Add((byte)value.Length);
             _buffer.AddRange(value);
         }
+        public void InsertBytes(byte[] value)
+        {
+            _buffer.AddRange(value);
+        }
         public void AddByte(byte value)
         {
             _buffer.Add((byte)1);
@@ -49,6 +53,11 @@ namespace Server.Core
                 _buffer.Add(id);
             else
                 _buffer[0] = id;
+        }
+
+        public void InsertPacketId(byte id)
+        {
+            _buffer.Insert(0, id);
         }
 
         public void SetPacketUid(int puid)
@@ -127,6 +136,15 @@ namespace Server.Core
             _buffer.RemoveRange(0, (int)_buffer[0] + 1);
 
             return Encoding.UTF8.GetString(result);
+        }
+
+        public byte[] GetEncodedBytes()
+        {
+            int length = _buffer[0];
+            byte[] bytes = _buffer.GetRange(1, length).ToArray();
+            _buffer.RemoveRange(0, length + 1);
+
+            return bytes;
         }
 
         #endregion

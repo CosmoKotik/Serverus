@@ -67,6 +67,8 @@ namespace MasterServer.Core
                             if (ACKPacketIds.Any(x => x.Equals(puid)))
                                 continue;
 
+                        _server.Send(bytes, groupEP);
+
                         //New client connected bs
                         switch (packetId)
                         {

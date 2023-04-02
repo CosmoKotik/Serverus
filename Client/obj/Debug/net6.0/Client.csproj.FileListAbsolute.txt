@@ -1,6 +1,4 @@
-D:\DEV\Visual Sudio Projects\Serverus\Client\bin\Debug\net6.0\Client.exe
 D:\DEV\Visual Sudio Projects\Serverus\Client\bin\Debug\net6.0\Client.deps.json
-D:\DEV\Visual Sudio Projects\Serverus\Client\bin\Debug\net6.0\Client.runtimeconfig.json
 D:\DEV\Visual Sudio Projects\Serverus\Client\bin\Debug\net6.0\Client.dll
 D:\DEV\Visual Sudio Projects\Serverus\Client\bin\Debug\net6.0\Client.pdb
 D:\DEV\Visual Sudio Projects\Serverus\Client\obj\Debug\net6.0\Client.csproj.AssemblyReference.cache
@@ -11,5 +9,4 @@ D:\DEV\Visual Sudio Projects\Serverus\Client\obj\Debug\net6.0\Client.csproj.Core
 D:\DEV\Visual Sudio Projects\Serverus\Client\obj\Debug\net6.0\Client.dll
 D:\DEV\Visual Sudio Projects\Serverus\Client\obj\Debug\net6.0\refint\Client.dll
 D:\DEV\Visual Sudio Projects\Serverus\Client\obj\Debug\net6.0\Client.pdb
-D:\DEV\Visual Sudio Projects\Serverus\Client\obj\Debug\net6.0\Client.genruntimeconfig.cache
 D:\DEV\Visual Sudio Projects\Serverus\Client\obj\Debug\net6.0\ref\Client.dll

@@ -52,7 +52,10 @@ namespace Server.Core
                 new Thread(() => { HandleP2P(); }).Start();
                 while (ServerInfo == null) { Thread.Sleep(1); }
 
+                //Load config
                 ServerInfo.MaxConnections = 2;
+
+                Udp.ServerInfo = ServerInfo;
 
                 byte[] bytes = new byte[MAX_BUFFER_SIZE];
                 int size;
@@ -131,7 +134,9 @@ namespace Server.Core
                                     _bufferManager.AddLong(ServerInfo.ServerID);
                                     _bufferManager.AddInt((int)srvs.SrvType);
                                     //_bufferManager.AddString(ServerInfo.IP);
+                                    _bufferManager.AddInt(ServerInfo.Port);
                                     _bufferManager.AddInt(Udp.Port);
+                                    _bufferManager.AddInt(srvs.MaxConnections);
 
                                     OtherServers.Add(srvs);
 
@@ -158,16 +163,17 @@ namespace Server.Core
             }
         }
 
-        public async Task SendConnAmount()
+        public void SendConnAmount(int connAmount)
         {
-            await Task.Run(() => 
+            Task t = Task.Factory.StartNew(() => 
             {
+                ServerInfo.CurrentConnections = connAmount;
                 BufferManager bm = new BufferManager();
                 bm.SetPacketId(0x05);
                 bm.AddLong(ServerInfo.ServerID);
-                bm.AddInt(ServerInfo.CurrentConnections);
+                bm.AddInt(connAmount);
 
-                _stream.Write(bm.GetBytes());
+                //_stream.Write(bm.GetBytes());
 
                 for (int i = 0; i < OtherServers.Count; i++)
                 {
@@ -175,6 +181,45 @@ namespace Server.Core
                 }
             });
         }
+
+        #region Send: Add connection / Remove Connection
+        public void SendAddClient(int clientId)
+        {
+            Task t = Task.Factory.StartNew(() =>
+            {
+                BufferManager bm = new BufferManager();
+                bm.SetPacketId(0x06);
+                bm.AddLong(ServerInfo.ServerID);
+                bm.AddInt(clientId);
+
+                //_stream.Write(bm.GetBytes());
+
+                for (int i = 0; i < OtherServers.Count; i++)
+                {
+                    OtherServers[i].Stream.Write(bm.GetBytes());
+                    Thread.Sleep(10);
+                }
+            });
+        }
+        public void SendRemoveClient(int clientId)
+        {
+            Task t = Task.Factory.StartNew(() =>
+            {
+                BufferManager bm = new BufferManager();
+                bm.SetPacketId(0x07);
+                bm.AddLong(ServerInfo.ServerID);
+                bm.AddInt(clientId);
+
+                //_stream.Write(bm.GetBytes());
+
+                for (int i = 0; i < OtherServers.Count; i++)
+                {
+                    OtherServers[i].Stream.Write(bm.GetBytes());
+                    Thread.Sleep(10);
+                }
+            });
+        }
+        #endregion
 
         private void HandleP2P()
         {
@@ -215,6 +260,10 @@ namespace Server.Core
                     {
                         bm.SetBytes(bytes);
                         int pid = bm.GetPacketId();
+
+                        long serverId;
+                        int clientId;
+
                         switch (pid)
                         {
                             case 0x02:
@@ -223,7 +272,9 @@ namespace Server.Core
                                     ServerID = bm.GetLong(),
                                     SrvType = (Servers.ServerType)bm.GetInt(),
                                     IP = clientEP!.Address.ToString(),
-                                    Port = bm.GetInt()
+                                    Port = bm.GetInt(),
+                                    UdpPort = bm.GetInt(),
+                                    MaxConnections = bm.GetInt()
                                 };
 
                                 int index = 0;
@@ -235,18 +286,43 @@ namespace Server.Core
                                         Udp.ConnectedEP.Add(new IPEndPoint(clientEP.Address, srv.Port));
 
                                     index = Udp.OtherServers.Count - 1;
+                                    //Console.WriteLine("geasrkgjhbawerkguyrewg");
                                 }
 
                                 new Thread(() => { Udp.HandleClient(index); }).Start();
                                 break;
                             case 0x05:
-                                long serverId = bm.GetLong();
+                                serverId = bm.GetLong();
                                 int cc = bm.GetInt();
 
                                 Servers currentsrv = OtherServers.Find(x => x.ServerID.Equals(serverId))!;
 
-                                currentsrv.CurrentConnections = cc;
-                                Console.WriteLine($"{serverId}: {cc}/{currentsrv.MaxConnections}");
+                                Udp.OtherServers.Find(x => x.ServerID.Equals(serverId))!.CurrentConnections = currentsrv.CurrentConnections = cc;
+                                //Console.WriteLine($"{serverId}: {cc}/{currentsrv.MaxConnections}");
+                                break;
+                            //Add new UDP client
+                            case 0x06:
+                                serverId = bm.GetLong();
+                                clientId = bm.GetInt();
+
+                                Client clientInstance = new Client()
+                                { 
+                                    ServerID = serverId,
+                                    ClientID = clientId
+                                };
+
+                                Udp.ConnectedClients.Add(clientInstance);
+
+                                //Console.WriteLine($"New client:{clientId} connected to: {serverId}");
+                                break;
+                            //Remove UDP client
+                            case 0x07:
+                                serverId = bm.GetLong();
+                                clientId = bm.GetInt();
+
+                                Udp.ConnectedClients.RemoveAll(x => x.ClientID.Equals(clientId));
+
+                                //Console.WriteLine($"Client:{clientId} disconnected from: {serverId}");
                                 break;
                         }
                     }
