@@ -36,7 +36,7 @@ namespace Server.Core
         public const int MAX_BUFFER_SIZE = 1024;
         public const int TIMEOUT = 500;
 
-        private string _localIp = "10.0.1.3";
+        private string _localIp = "10.0.0.3";
         private UdpClient _server = new UdpClient();
 
 
@@ -173,7 +173,7 @@ namespace Server.Core
 
                                         ConnectedClients.Add(client);
                                         Tcp.SendConnAmount(ServerInfo.CurrentConnections);
-                                        Tcp.SendAddClient(clientId);
+                                        Tcp.SendAddClient(clientId, client.ClientEndPoint);
 
                                         Console.WriteLine($"{clientId} Connected successfully {ServerInfo.CurrentConnections}/{ServerInfo.MaxConnections}");
 
@@ -185,7 +185,7 @@ namespace Server.Core
                                 switch (ServerInfo.SrvType)
                                 {
                                     case ServerType.Auth:
-                                        if (false == true)                  //CHANGE THIS WITH AUTHENTICATION VERIFICATION (NOT IMPLEMENTED)
+                                        if (true.Equals(false))                  //CHANGE THIS WITH AUTHENTICATION VERIFICATION (NOT IMPLEMENTED)
                                         {
                                             //Authentication failed
                                             bm.AddString("Failed Authentication");

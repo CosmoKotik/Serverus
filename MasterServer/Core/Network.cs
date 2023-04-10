@@ -11,6 +11,8 @@ namespace MasterServer.Core
 {
     internal class Network
     {
+        public UdpHandler Udp = default!;
+
         public bool Started { get; set; }
 
         public List<Server> Servers { get; set; } = new List<Server>();
@@ -20,7 +22,7 @@ namespace MasterServer.Core
         public const int TIMEOUT = 500;
 
         private int _port = 38174;
-        private string _localIp = "10.0.1.3";
+        private string _localIp = "10.0.0.3";
 
         private TcpListener? _server;
 

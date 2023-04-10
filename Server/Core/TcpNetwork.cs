@@ -8,6 +8,7 @@ using System.Net.Sockets;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
+using static Server.Core.Servers;
 
 namespace Server.Core
 {
@@ -27,20 +28,20 @@ namespace Server.Core
         public const int TIMEOUT = 500;
 
         private int _mainSrvPort = 38174;
-        private string _mainSrvIP = "10.0.1.3";
+        private string _mainSrvIP = "10.0.0.3";
 
         private int _port;
         private string _localIp = default!;
 
         internal void StartServer()
         {
-            _mainSrvIP = "10.0.0.34";
+            //_mainSrvIP = "10.0.0.34";
 
             try
             {
                 while (!Udp.IsStarted) { Thread.Sleep(1); }
                 _port = new Random().Next(50000, 51000);
-                _localIp = "10.0.1.3";
+                _localIp = GetLocalIPAddress();
                 _client = new TcpClient();
                 _client.Connect(IPAddress.Parse(_mainSrvIP), _mainSrvPort);
                 //while (!_client.Connected) { Thread.Sleep(1); }
@@ -100,6 +101,9 @@ namespace Server.Core
 
                                     _stream.Write(_bufferManager.GetBytes());
 
+
+                                    _bufferManager.SetPacketId(0x02);
+                                    _stream.Write(_bufferManager.GetBytes());
                                     //IPEndPoint ep = new IPEndPoint(IPAddress.Parse(ServerInfo.IP), _port);
                                     //ServerInfo.Client = new TcpListener(ep);
                                     //ServerInfo.Stream = ServerInfo.Client.AcceptTcpClient().GetStream();
@@ -143,7 +147,22 @@ namespace Server.Core
                                     stream.Write(_bufferManager.GetBytes());
                                     break;
                                 case 0x02:
-                                    
+                                    //Add peers
+                                    int peerAmount = _bufferManager.GetInt();
+                                    Console.WriteLine("GAY" + peerAmount);
+                                    for (int i = 0; i < peerAmount; i++)
+                                    {
+                                        Client peer = new Client()
+                                        {
+                                            ClientID = _bufferManager.GetInt(),
+                                            ServerID = _bufferManager.GetLong(),
+                                            ClientEndPoint = new IPEndPoint(IPAddress.Parse(_bufferManager.GetString()), _bufferManager.GetInt())
+                                        };
+
+                                        if (!Udp.ConnectedClients.Contains(peer))
+                                            Udp.ConnectedClients.Add(peer);
+                                        Console.WriteLine($"Added new client: {peer.ClientEndPoint.ToString()}");
+                                    }
                                     break;
                             }
                         }
@@ -183,7 +202,7 @@ namespace Server.Core
         }
 
         #region Send: Add connection / Remove Connection
-        public void SendAddClient(int clientId)
+        public void SendAddClient(int clientId, IPEndPoint ep)
         {
             Task t = Task.Factory.StartNew(() =>
             {
@@ -191,8 +210,10 @@ namespace Server.Core
                 bm.SetPacketId(0x06);
                 bm.AddLong(ServerInfo.ServerID);
                 bm.AddInt(clientId);
+                bm.AddString(ep.Address.ToString());
+                bm.AddInt(ep.Port);
 
-                //_stream.Write(bm.GetBytes());
+                _stream.Write(bm.GetBytes());
 
                 for (int i = 0; i < OtherServers.Count; i++)
                 {
@@ -210,7 +231,7 @@ namespace Server.Core
                 bm.AddLong(ServerInfo.ServerID);
                 bm.AddInt(clientId);
 
-                //_stream.Write(bm.GetBytes());
+                _stream.Write(bm.GetBytes());
 
                 for (int i = 0; i < OtherServers.Count; i++)
                 {
@@ -294,7 +315,7 @@ namespace Server.Core
                             case 0x05:
                                 serverId = bm.GetLong();
                                 int cc = bm.GetInt();
-
+                                 
                                 Servers currentsrv = OtherServers.Find(x => x.ServerID.Equals(serverId))!;
 
                                 Udp.OtherServers.Find(x => x.ServerID.Equals(serverId))!.CurrentConnections = currentsrv.CurrentConnections = cc;
@@ -308,7 +329,8 @@ namespace Server.Core
                                 Client clientInstance = new Client()
                                 { 
                                     ServerID = serverId,
-                                    ClientID = clientId
+                                    ClientID = clientId,
+                                    ClientEndPoint = new IPEndPoint(IPAddress.Parse(bm.GetString()), bm.GetInt())
                                 };
 
                                 Udp.ConnectedClients.Add(clientInstance);
@@ -328,15 +350,28 @@ namespace Server.Core
                     }
                 }
             }
-            catch
+            catch(Exception e)
             {
-
+                Console.WriteLine(e.ToString());
             }
             finally
             {
                 Console.WriteLine($"Server Lost Connection");
                 client.Dispose();
             }
+        }
+
+        private static string GetLocalIPAddress()
+        {
+            var host = Dns.GetHostEntry(Dns.GetHostName());
+            foreach (var ip in host.AddressList)
+            {
+                if (ip.AddressFamily == AddressFamily.InterNetwork)
+                {
+                    return ip.ToString();
+                }
+            }
+            throw new Exception("No network adapters with an IPv4 address in the system!");
         }
     }
 }

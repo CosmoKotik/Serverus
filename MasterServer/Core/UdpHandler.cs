@@ -12,6 +12,7 @@ namespace MasterServer.Core
     internal class UdpHandler
     {
         public Network Net { get; set; } = default!;
+        public List<Client> ClientPeers = new List<Client>();
 
         public readonly object OtherServersLock = new object();
         public readonly object ConnectedEPLock = new object();
@@ -23,7 +24,7 @@ namespace MasterServer.Core
         public List<int> ACKPacketIds { get; set; } = new List<int>();
 
         private int _port = 38175;
-        private string _localIp = "10.0.1.3";
+        private string _localIp = "10.0.0.3";
         private UdpClient _server = default!;
 
         public UdpHandler(Network n)
@@ -34,6 +35,7 @@ namespace MasterServer.Core
         public void StartServer()
         {
             while (!Net.Started) { Thread.Sleep(1); }
+            Net.Udp = this;
 
             _localIp = GetLocalIPAddress();
             Console.WriteLine(_localIp);

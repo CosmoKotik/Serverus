@@ -11,7 +11,7 @@ namespace Client.Core
 {
     internal class NetworkHandler
     {
-        public string MainServerIP { get; set; } = "10.0.0.34";
+        public string MainServerIP { get; set; } = "10.0.0.3";
         public int MainServerPort { get; set; } = 38175;
 
         public bool IsConnected { get; set; }
@@ -35,6 +35,8 @@ namespace Client.Core
 
         public void HandleConnection()
         {
+            new Thread(() => { poopoo(); }).Start();
+
             _port = new Random().Next(50000, 55000);
             using (_client = new UdpClient())
             {
@@ -55,81 +57,78 @@ namespace Client.Core
 
                     while (true)
                     {
-                        if (_client.Available > 0)
+                        byte[] bytes = _client.Receive(ref _remoteEndPoint);
+                        lock (ACKPacketsLock)
+                            if (ACKPackets.Any(x => x.EP.Equals(_remoteEndPoint) && x.bytes.SequenceEqual(bytes)))
+                            {
+                                ACKPackets.RemoveAll(x => x.EP.Equals(_remoteEndPoint) && x.bytes.SequenceEqual(bytes));
+                                continue;
+                            }
+
+                        bm.SetBytes(bytes);
+                        int packetId = bm.GetPacketId();
+                        int puid = bm.GetInt();
+
+                        lock (ACKPacketIdsLock)
+                            if (ACKPacketIds.Any(x => x.Equals(puid)))
+                                continue;
+
+                        _client.Send(bytes, _remoteEndPoint);
+
+                        switch (packetId)
                         {
-                            byte[] bytes = _client.Receive(ref _remoteEndPoint);
-                            lock (ACKPacketsLock)
-                                if (ACKPackets.Any(x => x.EP.Equals(_remoteEndPoint) && x.bytes.SequenceEqual(bytes)))
+                            //Redirect to specific server
+                            case 0x00:
+                                string srvIP = bm.GetString();
+                                int srvPort = bm.GetInt();
+                                _remoteEndPoint = new IPEndPoint(IPAddress.Parse(srvIP), srvPort);
+                                bm.SetPacketId(0x00);
+                                if (_isAuthenticated)
+                                    bm.AddInt(_clientID);
+                                SendWithACK(bm.GetBytes(), _remoteEndPoint);
+                                break;
+                            //Authentication shit
+                            case 0x01:
+                                _isAuthenticated = true;
+
+                                _clientID = bm.GetInt();
+
+                                bm.SetPacketId(0x01);
+                                bm.AddInt(_clientID);
+                                Console.WriteLine($"Running as {_clientID}");
+                                SendWithACK(bm.GetBytes(), _remoteEndPoint);
+
+                                //Send other crap
+                                break;
+                            //Authentication failed
+                            case 0xff:
+                                string reason = bm.GetString();
+                                _isAuthenticated = false;
+                                Console.WriteLine($"Disconnected: {reason}");
+                                _client.Dispose();
+                                Environment.Exit(0xff);
+                                break;
+                            //Get required data for p2p
+                            case 0x02:
+                                _connectedServerID = bm.GetLong();
+                                int clientCount = bm.GetInt();
+
+                                for (int i = 0; i < clientCount; i++)
                                 {
-                                    ACKPackets.RemoveAll(x => x.EP.Equals(_remoteEndPoint) && x.bytes.SequenceEqual(bytes));
-                                    continue;
+                                    Peer peer = new Peer()
+                                    {
+                                        ClientID = bm.GetInt(),
+                                        ServerID = bm.GetLong()
+                                    };
+                                    _peers.Add(peer);
+
+                                    Console.WriteLine($"Added new peer {peer.ClientID}:{peer.ServerID}");
                                 }
 
-                            bm.SetBytes(bytes);
-                            int packetId = bm.GetPacketId();
-                            int puid = bm.GetInt();
-
-                            lock (ACKPacketIdsLock)
-                                if (ACKPacketIds.Any(x => x.Equals(puid)))
-                                    continue;
-
-                            _client.Send(bytes, _remoteEndPoint);
-
-                            switch (packetId)
-                            {
-                                //Redirect to specific server
-                                case 0x00:
-                                    string srvIP = bm.GetString();
-                                    int srvPort = bm.GetInt();
-                                    _remoteEndPoint = new IPEndPoint(IPAddress.Parse(srvIP), srvPort);
-                                    bm.SetPacketId(0x00);
-                                    if (_isAuthenticated)
-                                        bm.AddInt(_clientID);
-                                    SendWithACK(bm.GetBytes(), _remoteEndPoint);
-                                    break;
-                                //Authentication shit
-                                case 0x01:
-                                    _isAuthenticated = true;
-
-                                    _clientID = bm.GetInt();
-
-                                    bm.SetPacketId(0x01);
-                                    bm.AddInt(_clientID);
-                                    Console.WriteLine($"Running as {_clientID}");
-                                    SendWithACK(bm.GetBytes(), _remoteEndPoint);
-
-                                    //Send other crap
-                                    break;
-                                //Authentication failed
-                                case 0xff:
-                                    string reason = bm.GetString();
-                                    _isAuthenticated = false;
-                                    Console.WriteLine($"Disconnected: {reason}");
-                                    _client.Dispose();
-                                    Environment.Exit(0xff);
-                                    break;
-                                //Get required data for p2p
-                                case 0x02:
-                                    _connectedServerID = bm.GetLong();
-                                    int clientCount = bm.GetInt();
-
-                                    for (int i = 0; i < clientCount; i++)
-                                    {
-                                        Peer peer = new Peer()
-                                        {
-                                            ClientID = bm.GetInt(),
-                                            ServerID = bm.GetLong()
-                                        };
-                                        _peers.Add(peer);
-
-                                        Console.WriteLine($"Added new peer {peer.ClientID}:{peer.ServerID}");
-                                    }
-
-                                    break;
-                                case 0x05:
-                                    Console.WriteLine(bm.GetString());
-                                    break;
-                            }
+                                break;
+                            case 0x05:
+                                Console.WriteLine(bm.GetString());
+                                break;
                         }
                     }
                 }
@@ -137,6 +136,23 @@ namespace Client.Core
                 {
                     Console.WriteLine(e.ToString());
                 }
+            }
+        }
+
+
+        public void poopoo()
+        {
+            BufferManager bm = new BufferManager();
+            while (true)
+            {
+                if (Console.KeyAvailable)
+                {
+                    bm.SetPacketId(0x05);
+                    bm.AddString(Console.ReadKey().KeyChar.ToString());
+                    SendData(bm.GetBytes());
+                }
+
+                Thread.Sleep(1);
             }
         }
 
