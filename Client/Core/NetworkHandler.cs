@@ -37,6 +37,8 @@ namespace Client.Core
         {
             new Thread(() => { poopoo(); }).Start();
 
+            MainServerIP = Config.GetConfig("MainServerIP");
+
             _port = new Random().Next(50000, 55000);
             using (_client = new UdpClient())
             {

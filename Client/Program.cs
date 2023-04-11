@@ -6,6 +6,8 @@ namespace Client
     {
         static void Main(string[] args)
         {
+            Config.LoadConfigs();
+
             Network.Connect();
         }
     }

@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using System.Text.RegularExpressions;
 using System.Xml.Serialization;
 using static Server.Core.Servers;
+using Server.Modules;
 
 namespace Server.Core
 {
@@ -45,7 +46,7 @@ namespace Server.Core
             ServerInfo = new Servers();
             Port = new Random().Next(50000, 55000);
             ServerInfo.UdpPort = Port;
-
+            
             _localIp = GetLocalIPAddress();
             //Console.Write($" UDP:{Port}");
 
@@ -96,6 +97,8 @@ namespace Server.Core
                             }
 
                         _server.Send(bytes, groupEP);
+
+                        bool isIPLocal = IPChecker.IsPrivate(groupEP.Address.ToString());           //Checks if client is local or no
 
                         int clientId;
                         int redirectClientId;
@@ -150,17 +153,21 @@ namespace Server.Core
 
                                             redirectBytes = (byte[])bm.GetBytes().Clone();
 
-                                            Console.WriteLine(OtherServers.Count + "   geagerg");
-
                                             if (ConnectedClients[i].ServerID.Equals(client.ServerID))
                                             {
                                                 Console.WriteLine($"Sending to {ConnectedClients[i].ClientID}");
                                                 SendWithACK(redirectBytes, ConnectedClients[i].ClientEndPoint);
                                                 continue;
                                             }
+                                            
                                             Console.WriteLine($"Sending to {ConnectedClients[i].ClientID}");
                                             redirectServer = OtherServers.Find(x => x.ServerID.Equals(ConnectedClients[i].ServerID))!;
-                                            redirectServerEndPoint = new IPEndPoint(IPAddress.Parse(redirectServer.IP)!, redirectServer.UdpPort);
+
+                                            if (redirectServer.IsServerLocal)
+                                                redirectServerEndPoint = new IPEndPoint(IPAddress.Parse(redirectServer.LocalIP)!, redirectServer.UdpPort);
+                                            else
+                                                redirectServerEndPoint = new IPEndPoint(IPAddress.Parse(redirectServer.PublicIP)!, redirectServer.UdpPort);
+
                                             bm.SetPacketId(0x04);
                                             bm.AddInt(ConnectedClients[i].ClientID);
                                             bm.InsertBytes(redirectBytes);
@@ -206,7 +213,10 @@ namespace Server.Core
                                                     Servers srv = OtherServers[i];
                                                     success = true;
                                                     bm.SetPacketId(0x00);
-                                                    bm.AddString(srv.IP);
+                                                    if (isIPLocal)
+                                                        bm.AddString(srv.LocalIP);
+                                                    else
+                                                        bm.AddString(srv.PublicIP);
                                                     bm.AddInt(srv.UdpPort);
                                                     SendWithACK(bm.GetBytes(), groupEP);
                                                     break;
@@ -223,7 +233,10 @@ namespace Server.Core
                                                 {
                                                     success = true;
                                                     bm.SetPacketId(0x00);
-                                                    bm.AddString(srv.IP);
+                                                    if (isIPLocal)
+                                                        bm.AddString(srv.LocalIP);
+                                                    else
+                                                        bm.AddString(srv.PublicIP);
                                                     bm.AddInt(srv.UdpPort);
                                                     SendWithACK(bm.GetBytes(), groupEP);
                                                     break;
@@ -255,30 +268,26 @@ namespace Server.Core
                                 if (redirectServerId.Equals(ServerInfo.ServerID))
                                 {
                                     SendWithACK(redirectBytes, ConnectedClients.Find(x => x.ClientID.Equals(redirectClientId))!.ClientEndPoint);
-                                    Console.WriteLine("asdad2");
                                     break;
                                 }
 
                                 redirectServer = OtherServers.Find(x => x.ServerID.Equals(redirectServerId))!;
-                                redirectServerEndPoint = new IPEndPoint(IPAddress.Parse(redirectServer.IP)!, redirectServer.UdpPort);
-                                Console.WriteLine("asdad3");
+                                if (isIPLocal)
+                                    redirectServerEndPoint = new IPEndPoint(IPAddress.Parse(redirectServer.LocalIP)!, redirectServer.UdpPort);
+                                else
+                                    redirectServerEndPoint = new IPEndPoint(IPAddress.Parse(redirectServer.PublicIP)!, redirectServer.UdpPort);
                                 bm.SetPacketId(0x04);
                                 bm.AddInt(redirectClientId);
                                 bm.InsertBytes(redirectBytes);
                                 SendWithACK(bm.GetBytes(), redirectServerEndPoint);
-                                Console.WriteLine("asdad4");
                                 break;
                             //Receive Redirected packet
                             case 0x04:
-                                Console.WriteLine("dfasdasd1");
                                 redirectClientId = bm.GetInt();
-                                Console.WriteLine("dfasdasd2: " + redirectClientId);
                                 redirectBytes = bm.GetBytes();
-                                Console.WriteLine("dfasdasd3");
                                 Console.WriteLine(BitConverter.ToString(redirectBytes).Replace("-", " "));
 
                                 SendWithACK(redirectBytes, ConnectedClients.Find(x => x.ClientID.Equals(redirectClientId))!.ClientEndPoint);
-                                Console.WriteLine("dfasdasd4");
                                 break;
                             default:
                                 Console.WriteLine($"{groupEP.Address}:{groupEP.Port} tried to send wrong data. What do we do now?");
@@ -320,7 +329,10 @@ namespace Server.Core
                         Console.WriteLine(bm.GetString());
                     }
 
-                    ep = new IPEndPoint(IPAddress.Parse(OtherServers[index].IP), OtherServers[index].Port);
+                    if (OtherServers[index].IsServerLocal)
+                    ep = new IPEndPoint(IPAddress.Parse(OtherServers[index].LocalIP), OtherServers[index].Port);
+                    else
+                    ep = new IPEndPoint(IPAddress.Parse(OtherServers[index].PublicIP), OtherServers[index].Port);
                 }
 
                 if (hasReceived)
@@ -402,7 +414,7 @@ namespace Server.Core
                 {
                     _server.Send(ACKPackets[i].bytes, ACKPackets[i].EP);
                 }
-                Thread.Sleep(200);
+                Thread.Sleep(350);
             }
         }
 

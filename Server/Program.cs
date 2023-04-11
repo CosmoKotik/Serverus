@@ -9,6 +9,8 @@ namespace Server
 
         static void Main(string[] args)
         {
+            Config.LoadConfigs();
+
             UdpNetwork udpNet = new UdpNetwork();
             TcpNetwork tcpNet = new TcpNetwork();
 

@@ -59,7 +59,8 @@ namespace MasterServer.Core
                                 //_network.Servers.Find(x => x.ServerID.Equals(id)).IP = bm.GetString();
                                 //_network.Servers.Find(x => x.ServerID.Equals(id)).Port = bm.GetInt();
 
-                                srv.IP = bm.GetString();
+                                srv.LocalIP = bm.GetString();
+                                srv.PublicIP = bm.GetString();
                                 srv.Port = bm.GetInt();
                                 srv.UdpPort = bm.GetInt();
                                 srv.MaxConnections = bm.GetInt();
@@ -73,7 +74,14 @@ namespace MasterServer.Core
                                         bm.SetPacketId(0x01);
                                         bm.AddLong(_network.Servers[i].ServerID);
                                         bm.AddInt((int)_network.Servers[i].SrvType);
-                                        bm.AddString(_network.Servers[i].IP);
+                                        bm.AddString(_network.Servers[i].LocalIP);
+                                        bm.AddString(_network.Servers[i].PublicIP);
+                                        
+                                        if (_network.Servers[i].IsServerLocal && srv.IsServerLocal)         //Checks if new server is local with other server
+                                            bm.AddBool(true);
+                                        else
+                                            bm.AddBool(false);
+
                                         bm.AddInt(_network.Servers[i].Port);
                                         bm.AddInt(_network.Servers[i].UdpPort);
                                         bm.AddInt(_network.Servers[i].MaxConnections);
@@ -85,7 +93,14 @@ namespace MasterServer.Core
                                         bm.SetPacketId(0x01);
                                         bm.AddLong(srv.ServerID);
                                         bm.AddInt((int)srv.SrvType);
-                                        bm.AddString(srv.IP);
+                                        bm.AddString(srv.LocalIP);
+                                        bm.AddString(srv.PublicIP);
+
+                                        if (_network.Servers[i].IsServerLocal && srv.IsServerLocal)         //Checks if new server is local with other server
+                                            bm.AddBool(true);
+                                        else
+                                            bm.AddBool(false);
+                                        
                                         bm.AddInt(srv.Port);
                                         bm.AddInt(srv.UdpPort);
                                         bm.AddInt(srv.MaxConnections);
@@ -95,6 +110,7 @@ namespace MasterServer.Core
                                             _network.Servers[i].Client.GetStream().Flush();
                                         }
                                         //_network.Servers[i].Client.Client.Send(bm.GetBytes());
+                                        
                                         Thread.Sleep(100);
                                     }
                                     _network.Servers.Add(srv);
@@ -104,30 +120,18 @@ namespace MasterServer.Core
                             case 0x02:
                                 //Transfer current clients
                                 bm.SetPacketId(0x02);
-                                Console.WriteLine("GAY1 CALLED");
                                 lock (_network.Udp)
                                 {
-                                    Console.WriteLine("GAY2");
                                     bm.AddInt(_network.Udp.ClientPeers.Count);
-                                    Console.WriteLine("GAY3");
                                     for (int i = 0; i < _network.Udp.ClientPeers.Count; i++)
                                     {
-                                        Console.WriteLine("GAY4");
                                         peer = _network.Udp.ClientPeers[i];
-                                        Console.WriteLine("GAY4.1");
                                         bm.AddInt(peer.ClientID);
-                                        Console.WriteLine("GAY4.2");
                                         bm.AddLong(peer.ServerID);
-                                        Console.WriteLine("GAY4.3");
-                                        Console.WriteLine(peer.ClientEndPoint.Address);
                                         bm.AddString(peer.ClientEndPoint.Address.ToString());
-                                        Console.WriteLine("GAY4.4");
                                         bm.AddInt(peer.ClientEndPoint.Port);
-                                        Console.WriteLine("GAY5");
                                     }
-                                    Console.WriteLine("GAY6");
                                     stream.Write(bm.GetBytes(), 0, bm.GetBytes().Length);
-                                    Console.WriteLine("GAY7");
                                 }
                                 break;
                             case 0x05:

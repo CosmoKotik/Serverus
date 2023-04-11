@@ -1,4 +1,5 @@
-﻿using System;
+﻿using MasterServer.Modules;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
@@ -53,11 +54,15 @@ namespace MasterServer.Core
                     if (Servers.Any(x => x.ServerID.Equals(serverId)))
                         serverId = new Random().NextInt64();
 
+                    bool isLocal = IPChecker.IsPrivate(clientEP!.Address.ToString());
+
                     Server srv = new Server()
                     {
                         ServerID = serverId,
                         SrvType = srvType,
-                        IP = clientEP!.Address.ToString(),
+                        LocalIP = clientEP!.Address.ToString(),
+                        PublicIP = clientEP!.Address.ToString(),
+                        IsServerLocal = isLocal,
                         Port = clientEP.Port,
                         Client = client
                     };

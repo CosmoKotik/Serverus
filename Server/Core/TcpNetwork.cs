@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Server.Modules;
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
@@ -54,7 +55,8 @@ namespace Server.Core
                 while (ServerInfo == null) { Thread.Sleep(1); }
 
                 //Load config
-                ServerInfo.MaxConnections = 2;
+                //ServerInfo.MaxConnections = 2;
+                ServerInfo.MaxConnections = int.Parse(Config.GetConfig("maxConnections"));
 
                 Udp.ServerInfo = ServerInfo;
 
@@ -88,19 +90,20 @@ namespace Server.Core
 
                                     ServerInfo.ServerID = _bufferManager.GetLong();
                                     ServerInfo.SrvType = (Servers.ServerType)_bufferManager.GetInt();
-                                    ServerInfo.IP = _localIp;
+                                    ServerInfo.LocalIP = _localIp;
+                                    ServerInfo.PublicIP = Config.GetConfig("externalIp");
                                     ServerInfo.Port = _port;
                                     ServerInfo.UdpPort = Udp.Port;
 
                                     _bufferManager.SetPacketId(0x00);
                                     _bufferManager.AddLong(ServerInfo.ServerID);
-                                    _bufferManager.AddString(ServerInfo.IP);
+                                    _bufferManager.AddString(ServerInfo.LocalIP);
+                                    _bufferManager.AddString(ServerInfo.PublicIP);
                                     _bufferManager.AddInt(ServerInfo.Port);
                                     _bufferManager.AddInt(ServerInfo.UdpPort);
                                     _bufferManager.AddInt(ServerInfo.MaxConnections);
 
                                     _stream.Write(_bufferManager.GetBytes());
-
 
                                     _bufferManager.SetPacketId(0x02);
                                     _stream.Write(_bufferManager.GetBytes());
@@ -115,21 +118,26 @@ namespace Server.Core
                                     {
                                         ServerID = _bufferManager.GetLong(),
                                         SrvType = (Servers.ServerType)_bufferManager.GetInt(),
-                                        IP = _bufferManager.GetString(),
+                                        LocalIP = _bufferManager.GetString(),
+                                        PublicIP = _bufferManager.GetString(),
+                                        IsServerLocal = _bufferManager.GetBool(),
                                         Port = _bufferManager.GetInt(),
                                         UdpPort = _bufferManager.GetInt(),
                                         MaxConnections = _bufferManager.GetInt()
                                     };
                                     TcpClient client = new TcpClient();
-                                    client.Connect(srvs.IP, srvs.Port);
-                                    //Console.WriteLine(client.Client.RemoteEndPoint);
+
+                                    string srvIP;
+                                    if (srvs.IsServerLocal)
+                                        srvIP = srvs.LocalIP;
+                                    else
+                                        srvIP = srvs.PublicIP;
+
+                                    client.Connect(srvIP, srvs.Port);
                                     NetworkStream stream = client.GetStream();
 
                                     srvs.Client = client;
                                     srvs.Stream = stream;
-
-                                    //srvs.Client = new TcpClient(srvs.IP, srvs.Port);
-                                    //srvs.Stream = srvs.Client.GetStream();
 
                                     //Add other auth/game server
                                     Console.WriteLine($"Added new {srvs.SrvType} server from port {srvs.Port}");
@@ -137,7 +145,8 @@ namespace Server.Core
                                     _bufferManager.SetPacketId(0x02);
                                     _bufferManager.AddLong(ServerInfo.ServerID);
                                     _bufferManager.AddInt((int)srvs.SrvType);
-                                    //_bufferManager.AddString(ServerInfo.IP);
+                                    _bufferManager.AddString(ServerInfo.LocalIP);
+                                    _bufferManager.AddString(ServerInfo.PublicIP);
                                     _bufferManager.AddInt(ServerInfo.Port);
                                     _bufferManager.AddInt(Udp.Port);
                                     _bufferManager.AddInt(srvs.MaxConnections);
@@ -149,7 +158,6 @@ namespace Server.Core
                                 case 0x02:
                                     //Add peers
                                     int peerAmount = _bufferManager.GetInt();
-                                    Console.WriteLine("GAY" + peerAmount);
                                     for (int i = 0; i < peerAmount; i++)
                                     {
                                         Client peer = new Client()
@@ -292,7 +300,9 @@ namespace Server.Core
                                 {
                                     ServerID = bm.GetLong(),
                                     SrvType = (Servers.ServerType)bm.GetInt(),
-                                    IP = clientEP!.Address.ToString(),
+                                    LocalIP = bm.GetString(),
+                                    PublicIP = bm.GetString(),
+                                    IsServerLocal = IPChecker.IsPrivate(clientEP!.Address.ToString()),
                                     Port = bm.GetInt(),
                                     UdpPort = bm.GetInt(),
                                     MaxConnections = bm.GetInt()

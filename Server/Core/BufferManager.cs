@@ -44,6 +44,11 @@ namespace Server.Core
             _buffer.Add((byte)1);
             _buffer.Add(value);
         }
+        public void AddBool(bool value)
+        {
+            byte boolByte = value ? (byte)1 : (byte)0;
+            _buffer.Add(boolByte);
+        }
 
         public void SetPacketId(byte id)
         {
@@ -145,6 +150,12 @@ namespace Server.Core
             _buffer.RemoveRange(0, length + 1);
 
             return bytes;
+        }
+        public bool GetBool()
+        {
+            bool value = _buffer[0] != 0;
+            _buffer.RemoveAt(0);
+            return value;
         }
 
         #endregion

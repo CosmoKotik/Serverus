@@ -6,6 +6,7 @@ using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 using System.Text.RegularExpressions;
+using MasterServer.Modules;
 
 namespace MasterServer.Core
 {
@@ -53,7 +54,6 @@ namespace MasterServer.Core
                     while (true)
                     {
                         byte[] bytes = _server.Receive(ref groupEP);
-                        Console.WriteLine(bytes);
                         lock (ACKPacketsLock)
                             if (ACKPackets.Any(x => x.EP.Equals(groupEP) && x.bytes.SequenceEqual(bytes)))
                             {
@@ -71,6 +71,8 @@ namespace MasterServer.Core
 
                         _server.Send(bytes, groupEP);
 
+                        bool isIPLocal = IPChecker.IsPrivate(groupEP.Address.ToString());
+
                         //New client connected bs
                         switch (packetId)
                         {
@@ -81,7 +83,12 @@ namespace MasterServer.Core
                                     {
                                         Server srv = Net.Servers[i - 1];
                                         bm.SetPacketId(0x00);
-                                        bm.AddString(srv.IP);
+                                        
+                                        if (isIPLocal)
+                                            bm.AddString(srv.LocalIP);
+                                        else
+                                            bm.AddString(srv.PublicIP);
+                                        
                                         bm.AddInt(srv.UdpPort);
                                         SendWithACK(bm.GetBytes(), groupEP);
                                         //_server.Send(bm.GetBytes(), groupEP);
